@@ -13,6 +13,7 @@
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include "shmBus.h"
 
 pid_t   Fork(void);
 void    unix_error(char *msg) ;
