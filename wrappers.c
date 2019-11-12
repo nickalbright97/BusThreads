@@ -216,4 +216,12 @@ void  Pthread_join(pthread_t tid, void **thread_return)
         exit( -1 ) ;
     } 
 }
+key_t Ftok(char *pathname, char proj_id) {
+    int key;
+    key = ftok(pathname, proj_id);
+    if (key == -1) {
+        perror("Frok failed");
+        exit(-1);
+    }
+}
 

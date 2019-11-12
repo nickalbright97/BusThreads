@@ -2,17 +2,22 @@
  * Wrappers for system call functions
  ************************************************/
 
-#include <sys/msg.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <semaphore.h>
+#include <sys/stat.h>    
+#include <sys/msg.h>
+#include <fcntl.h>
+#include <sys/msg.h>
+#include <errno.h>
+#include <string.h>
+
 #include "shmBus.h"
 
 pid_t   Fork(void);

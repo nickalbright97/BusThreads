@@ -24,7 +24,7 @@ typedef struct {
     int totalTrips; // Total trips for each tourist
 } busArgs;
 
-#define SHMEM_SIZE sizeof(shmData)
+#define SHMEM_SIZE sizeof(shmBus)
 #define BUS_ARGS_SIZE sizeof(busArgs)
 #define PROJ_ID 13
 
