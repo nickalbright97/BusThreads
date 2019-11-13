@@ -18,11 +18,6 @@ typedef struct {
     int tickets; // Total tickets for today = totalTourists * totalTrips
 } shmBus ;
 
-typedef struct {
-    int totalSeats; // Total seats on bus (regardless of occupancy)
-    int totalTourists; // Total Tourists that day
-    int totalTrips; // Total trips for each tourist
-} busArgs;
 
 #define SHMEM_SIZE sizeof(shmBus)
 #define BUS_ARGS_SIZE sizeof(busArgs)

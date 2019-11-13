@@ -176,6 +176,15 @@ int  Sem_destroy(sem_t *sem)
     return code ;
 }
 
+int Sem_getvalue(sem_t *sem, int *sval) {
+    int r;
+    r = sem_getvalue(sem, sval);
+    if (r == -1) {
+        perror("Sem_getvalue failed");
+        exit(-1);
+    }
+}
+
 int   Msgget( key_t key, int msgflg )
 {
     int code ;

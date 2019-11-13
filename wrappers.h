@@ -35,6 +35,7 @@ int     Sem_wait( sem_t *sem ) ;
 int     Sem_post( sem_t *sem ) ;
 int     Sem_init( sem_t *sem, int pshared, unsigned int value ) ;
 int     Sem_destroy( sem_t *sem ) ;
+int     Sem_getvalue(sem_t *sem, int *sval);
 
 int     Msgget( key_t key, int msgflg );
 
