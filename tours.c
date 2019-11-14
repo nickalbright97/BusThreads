@@ -90,8 +90,10 @@ void *indy( void *ptr) {
         for (int i = 0; i < sBus->totalSeats; i++) {
             Sem_post(&startSing);
         }
+        Sem_wait(&textTex);
         printf("Indy     : Bus will now move. We All must Sing!\n");
         printf("Indy     : Bus! Bus! On the street! Who is the fastest driver to beat?\n");
+        Sem_post(&textTex);
         usleep(randDur); // Sleep for duration of tour
         while (songNumber < sBus->onBoard) { 
             Sem_getvalue(&songsSung, &songNumber);
