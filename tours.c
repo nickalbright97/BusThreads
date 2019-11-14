@@ -8,7 +8,7 @@
 #include <time.h>
 #include "wrappers.h"
 
-sem_t busEmpty, canStart, beltsFastened, startSing, fastenAlert, songsSung, availSeats, tourDone, shmAccess; // used
+sem_t textTex, busEmpty, canStart, beltsFastened, startSing, fastenAlert, songsSung, availSeats, tourDone, shmAccess; // used
 
 void reset_semaphores()
 {
@@ -21,6 +21,7 @@ void reset_semaphores()
     Sem_init(&startSing, 0, 0);
     Sem_init(&fastenAlert, 0, 0);
     Sem_init(&songsSung, 0, 0);
+    Sem_init(&textTex, 0, 1);
 }
 
 void *indy( void *ptr) {
@@ -38,11 +39,11 @@ void *indy( void *ptr) {
     shmid = Shmget(shmkey, SHMEM_SIZE, shmflg);
     sBus = Shmat(shmid, NULL, 0);
     
-    printf("Indy     : Hey! I Just Started My Day Waiting for ALL tourists to arrive in town\n");
+    printf("\nIndy     : Hey! I Just Started My Day Waiting for ALL tourists to arrive in town\n\n");
     
     srandom(time(NULL));
     int randDur;
-    randDur = random() % 2501 + 1500;
+    
     
     int numTours = 0;
     int beltNumber = 0;
@@ -53,22 +54,39 @@ void *indy( void *ptr) {
         if (sBus->tickets < 1) {
             break; // break out of while loop
         }
-        printf("Indy     : New Tour. Declaring %d vacant seats\n", sBus->totalSeats); 
+
+        randDur = random() % 2501 + 1500;
+        Sem_wait(&textTex);
+        printf("\nIndy     : New Tour. Declaring %d vacant seats\n", sBus->totalSeats); 
+        Sem_post(&textTex);
+        Sem_wait(&textTex);
         printf("Indy     : taking a nap till tourists get on board.\n"); 
+        Sem_post(&textTex);
         sBus->onBoard = 0; // Clear Bus Seats
+
         for (int i = 0; i < sBus->totalSeats; i++) {
             Sem_post(&availSeats); // Seats are available
         }
+        
         Sem_wait(&canStart);
+
+        Sem_wait(&textTex);
         printf("Indy     : Welcome On Board Dear %d Passenger(s)! Please, fasten your seat belts\n", sBus->onBoard); 
+        Sem_post(&textTex);
         for (int i = 0; i < sBus->totalSeats; i++) {
             Sem_post(&fastenAlert); // tell passengers to fasten their seatbelts
         }
+
         while (beltNumber < sBus->onBoard) { 
             Sem_getvalue(&beltsFastened, &beltNumber);
         }; // wait til all belts are fastened
+
+        Sem_wait(&textTex);
         printf("Indy     : Thank you all for fastening your seatbelts.\n");
+        Sem_post(&textTex);
+        Sem_wait(&textTex);
         printf("Indy     : Tour will last for %d milliseconds\n", randDur);
+        Sem_post(&textTex);
         for (int i = 0; i < sBus->totalSeats; i++) {
             Sem_post(&startSing);
         }
@@ -90,7 +108,7 @@ void *indy( void *ptr) {
     }
     
     
-    printf("Indy     : Business is now closed. I did %2d tours today\n", numTours);
+    printf("\nIndy     : Business is now closed. I did %2d tours today\n", numTours);
     return NULL;
 }
 
@@ -101,6 +119,7 @@ void *tourist (void *ptr) {
     int shmflg, shmid;
     int isFastened = 0;
     key_t shmkey;
+    srandom(time(NULL));
 
     shmBus *sBus;
     
@@ -113,19 +132,28 @@ void *tourist (void *ptr) {
     shmid = Shmget(shmkey, SHMEM_SIZE, shmflg);
     sBus = Shmat(shmid, NULL, 0);
 
+    
+    
     tID = (long) ptr;
     curTour = 0;
+
+    Sem_wait(&textTex);
     printf("Tourist %ld: Hey! I just arrived to Harrisonburg.\n", tID);
+    Sem_post(&textTex);
 
     while (curTour < sBus->totalTrips) {
 
-        srandom(time(NULL));
-        int randDur;
+        
+        long randDur;
         randDur = random() % 2001 + 500;
         
-        printf("Tourist %ld: Tour # %d.  Going to shop for %d milliseconds.\n", tID, curTour + 1, randDur);
+        Sem_wait(&textTex);
+        printf("Tourist %ld: Tour # %d.  Going to shop for %ld milliseconds.\n", tID, curTour + 1, randDur);
         sBus->inTown++;
+        Sem_post(&textTex);
+
         usleep(randDur);
+        Sem_wait(&textTex);
         printf("Tourist %ld: Back from shopping, waiting for a seat on the bus\n", tID);
         if (sBus->onBoard < sBus->totalSeats) { // If bus is full, don't wait
             Sem_wait(&availSeats); // Wait for available seats
@@ -139,6 +167,7 @@ void *tourist (void *ptr) {
         if (sBus->onBoard >= sBus->totalSeats || sBus->inTown == 0) {
             Sem_post(&canStart);
         }
+        Sem_post(&textTex);
         Sem_wait(&fastenAlert);
         isFastened = 1;
         Sem_post(&beltsFastened); // fasten belt
@@ -221,6 +250,7 @@ int main(int argc, char **argv)
     Sem_init(&startSing, 0, 0);
     Sem_init(&fastenAlert, 0, 0);
     Sem_init(&songsSung, 0, 0);
+    Sem_init(&textTex, 0, 1);
 
     printf("*********************************************************************\n");
     printf("Operator:    Bus has %d seats. We expect %2d tourists today. Each will make %d tours.\n", 
@@ -254,8 +284,9 @@ int main(int argc, char **argv)
     Sem_destroy(&startSing);
     Sem_destroy(&fastenAlert);
     Sem_destroy(&songsSung);
+    Sem_destroy(&textTex);
     
-    printf("OPERATOR Terminated\n");
+    printf("\nOPERATOR Terminated\n");
 }
 
 
