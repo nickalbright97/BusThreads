@@ -10,6 +10,8 @@
 
 sem_t textTex, busEmpty, canStart, beltsFastened, startSing, fastenAlert, songsSung, availSeats, tourDone, shmAccess;
 
+int totalSeats, totalTourists, totalTrips, onBoard, inTown, tickets;
+
 void reset_semaphores()
 {
     Sem_init(&availSeats, 0, 0);
@@ -25,80 +27,65 @@ void reset_semaphores()
 }
 
 void *indy( void *ptr) {
-    int shmflg, shmid;
-    key_t shmkey;
-
-    shmBus *sBus;
-
-    shmflg = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | IPC_CREAT;
-    shmkey = ftok("shmBus.h", PROJ_ID);
-    if (shmkey == -1) {
-        perror("error creating shared memory segment");
-        exit(-1);
-    }
-    shmid = Shmget(shmkey, SHMEM_SIZE, shmflg);
-    sBus = Shmat(shmid, NULL, 0);
     
     printf("\nIndy     : Hey! I Just Started My Day Waiting for ALL tourists to arrive in town\n\n");
     
     srandom(time(NULL));
     int randDur;
-    
-    
     int numTours = 0;
     int beltNumber = 0;
     int songNumber = 0;
        
     
     while (1 == 1) {
-        if (sBus->tickets < 1) {
+        if (tickets < 1) {
             break; // break out of while loop
         }
 
         randDur = random() % 2501 + 1500;
-        Sem_wait(&textTex);
-        printf("\nIndy     : New Tour. Declaring %d vacant seats\n", sBus->totalSeats); 
-        Sem_post(&textTex);
-        Sem_wait(&textTex);
+    //    Sem_wait(&textTex);
+        printf("\nIndy     : New Tour. Declaring %d vacant seats\n", totalSeats); 
+   //     Sem_post(&textTex);
+   //     Sem_wait(&textTex);
         printf("Indy     : taking a nap till tourists get on board.\n"); 
-        Sem_post(&textTex);
-        sBus->onBoard = 0; // Clear Bus Seats
+   //     Sem_post(&textTex);
+        onBoard = 0; // Clear Bus Seats
 
-        for (int i = 0; i < sBus->totalSeats; i++) {
+        for (int i = 0; i < totalSeats; i++) {
             Sem_post(&availSeats); // Seats are available
         }
         
         Sem_wait(&canStart);
 
-        Sem_wait(&textTex);
-        printf("Indy     : Welcome On Board Dear %d Passenger(s)! Please, fasten your seat belts\n", sBus->onBoard); 
-        Sem_post(&textTex);
-        for (int i = 0; i < sBus->totalSeats; i++) {
+  //      Sem_wait(&textTex);
+        printf("Indy     : Welcome On Board Dear %d Passenger(s)! Please, fasten your seat belts\n", onBoard); 
+  //      Sem_post(&textTex);
+        for (int i = 0; i < totalSeats; i++) {
             Sem_post(&fastenAlert); // tell passengers to fasten their seatbelts
         }
 
-        while (beltNumber < sBus->onBoard) { 
+        while (beltNumber < onBoard) { 
             Sem_getvalue(&beltsFastened, &beltNumber);
         }; // wait til all belts are fastened
 
-        Sem_wait(&textTex);
+   //     Sem_wait(&textTex);
         printf("Indy     : Thank you all for fastening your seatbelts.\n");
-        Sem_post(&textTex);
-        Sem_wait(&textTex);
+   //     Sem_post(&textTex);
+   //     Sem_wait(&textTex);
         printf("Indy     : Tour will last for %d milliseconds\n", randDur);
-        Sem_post(&textTex);
-        for (int i = 0; i < sBus->totalSeats; i++) {
+  //      Sem_post(&textTex);
+        for (int i = 0; i < totalSeats; i++) {
             Sem_post(&startSing);
         }
-        Sem_wait(&textTex);
+  //      Sem_wait(&textTex);
         printf("Indy     : Bus will now move. We All must Sing!\n");
         printf("Indy     : Bus! Bus! On the street! Who is the fastest driver to beat?\n");
-        Sem_post(&textTex);
+ //       Sem_post(&textTex);
         usleep(randDur); // Sleep for duration of tour
-        while (songNumber < sBus->onBoard) { 
+        while (songNumber < onBoard) { 
             Sem_getvalue(&songsSung, &songNumber);
         }; // wait til all passengers have sung
-        for (int i = 0; i < sBus->totalSeats; i++) {
+        for (int i = 0; i < totalSeats; i++) {
             Sem_post(&tourDone); // Tour has ended
         }
         printf("Indy     : Tour is over. Thanks for your business\n");
@@ -106,6 +93,7 @@ void *indy( void *ptr) {
         numTours++;
 
         reset_semaphores();
+        beltNumber = 0;
         
     }
     
@@ -118,58 +106,50 @@ void *indy( void *ptr) {
 void *tourist (void *ptr) {
     long tID;
     int curTour;    
-    int shmflg, shmid;
     int isFastened = 0;
-    key_t shmkey;
+
     srandom(time(NULL));
-
-    shmBus *sBus;
-    
-    shmflg = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | IPC_CREAT;
-    shmkey = ftok("shmBus.h", PROJ_ID);
-    if (shmkey == -1) {
-        perror("error creating shared memory segment");
-        exit(-1);
-    }
-    shmid = Shmget(shmkey, SHMEM_SIZE, shmflg);
-    sBus = Shmat(shmid, NULL, 0);
-
-    
-    
+            
     tID = (long) ptr;
     curTour = 0;
 
-    Sem_wait(&textTex);
+ //   Sem_wait(&textTex);
     printf("Tourist %ld: Hey! I just arrived to Harrisonburg.\n", tID);
-    Sem_post(&textTex);
+ //   Sem_post(&textTex);
 
-    while (curTour < sBus->totalTrips) {
+    while (curTour < totalTrips) {
 
         
         long randDur;
         randDur = random() % 2001 + 500;
         
-        Sem_wait(&textTex);
+ //       Sem_wait(&textTex);
         printf("Tourist %ld: Tour # %d.  Going to shop for %ld milliseconds.\n", tID, curTour + 1, randDur);
-        sBus->inTown++;
-        Sem_post(&textTex);
+        inTown++;
+//        Sem_post(&textTex);
 
         usleep(randDur);
-        Sem_wait(&textTex);
+//        Sem_wait(&textTex);
         printf("Tourist %ld: Back from shopping, waiting for a seat on the bus\n", tID);
-        if (sBus->onBoard < sBus->totalSeats || sBus->totalSeats == 0) { // If bus is full, don't wait
-            Sem_wait(&availSeats); // Wait for available seats
+        while (1 == 1) {
+            int availSeatsInt = 0;
+            Sem_getvalue(&availSeats, &availSeatsInt);
+            if (availSeatsInt > 0) {
+                Sem_wait(&availSeats); // Wait for available seats
+                break;
+            }
         }
-        sBus->onBoard++;
-        sBus->inTown--;
-        sBus->tickets--;
+
+        onBoard++;
+        inTown--;
+        tickets--;
         // Click here is weird > PDF Description says click should wait for bus driver to ask riders to fasten but 
         // sample output does it like this
         printf("Tourist %ld: I got a seat on the bus.. CLICK\n", tID);
-        if (sBus->onBoard >= sBus->totalSeats || sBus->inTown == 0) {
+        if (onBoard >= totalSeats || inTown == 0) {
             Sem_post(&canStart);
         }
-        Sem_post(&textTex);
+  //      Sem_post(&textTex);
         Sem_wait(&fastenAlert);
         isFastened = 1;
         Sem_post(&beltsFastened); // fasten belt
@@ -179,8 +159,8 @@ void *tourist (void *ptr) {
         Sem_wait(&tourDone); // wait til tour is done
         Sem_wait(&shmAccess); // Take turns getting off bus
         printf("Tourist %ld: Got off the bus\n", tID);
-        sBus->onBoard--;
-        if (sBus->onBoard == 0) {
+        onBoard--;
+        if (onBoard == 0) {
             printf("Tourist %ld: Last to get off. Alerting Driver Bus is now empty \n", tID);
             Sem_post(&busEmpty);
         }
@@ -198,13 +178,7 @@ void *tourist (void *ptr) {
 
 int main(int argc, char **argv)
 {
-    int totalSeats, totalTourists, totalTrips;
-    int shmflg, shmid;
-    key_t shmkey;
-    shmBus *sBus;
 
-
-    int factory_lines, order_size;
     if (argc != 4) { 
         perror("Must be three arguments: seats on the bus, number of tourists, and trips each tourist takes");     
         exit(EXIT_FAILURE);
@@ -221,27 +195,9 @@ int main(int argc, char **argv)
         perror("error - not an integer");
     }
 
-    // Initialize shared memory
-    shmflg = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | IPC_CREAT;
-    shmkey = ftok("shmBus.h", PROJ_ID);
-    if (shmkey == -1) {
-        perror("error creating shared memory segment");
-        exit(-1);
-    }
-    shmid = Shmget(shmkey, SHMEM_SIZE, shmflg);
-    sBus = Shmat(shmid, NULL, 0);
-    sBus->totalSeats = totalSeats;
-    sBus->totalTourists = totalTourists;
-    sBus->totalTrips = totalTrips;
-    sBus->onBoard = 0;
-    sBus->inTown = 0;
-    sBus->tickets = totalTrips * totalTourists;
-
-    //initialize semaphores
-    int semflg, semmode;
-    semflg = O_CREAT;
-    semmode = S_IRUSR | S_IWUSR;
-
+    onBoard = 0;
+    inTown = 0;
+    tickets = totalTrips * totalTourists;
 
     Sem_init(&availSeats, 0, 0);
     Sem_init(&shmAccess, 0, 1);
@@ -256,7 +212,7 @@ int main(int argc, char **argv)
 
     printf("*********************************************************************\n");
     printf("Operator:    Bus has %d seats. We expect %2d tourists today. Each will make %d tours.\n", 
-        sBus->totalSeats, sBus->totalTourists, sBus->totalTrips);
+        totalSeats, totalTourists, totalTrips);
     printf("*********************************************************************\n");
 
     long unsigned int indyID;
