@@ -1,0 +1,10 @@
+*********************************************************************
+Operator:    Bus has 3 seats. We expect  0 tourists today. Each will make 0 tours.
+*********************************************************************
+
+Indy     : Hey! I Just Started My Day Waiting for ALL tourists to arrive in town
+
+
+Indy     : Business is now closed. I did  0 tours today
+
+OPERATOR Terminated

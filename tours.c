@@ -8,7 +8,7 @@
 #include <time.h>
 #include "wrappers.h"
 
-sem_t textTex, busEmpty, canStart, beltsFastened, startSing, fastenAlert, songsSung, availSeats, tourDone, shmAccess; // used
+sem_t textTex, busEmpty, canStart, beltsFastened, startSing, fastenAlert, songsSung, availSeats, tourDone, shmAccess;
 
 void reset_semaphores()
 {
@@ -157,7 +157,7 @@ void *tourist (void *ptr) {
         usleep(randDur);
         Sem_wait(&textTex);
         printf("Tourist %ld: Back from shopping, waiting for a seat on the bus\n", tID);
-        if (sBus->onBoard < sBus->totalSeats) { // If bus is full, don't wait
+        if (sBus->onBoard < sBus->totalSeats || sBus->totalSeats == 0) { // If bus is full, don't wait
             Sem_wait(&availSeats); // Wait for available seats
         }
         sBus->onBoard++;
